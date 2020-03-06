@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/name: {{ $.Values.server.name }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }} 
+    app.kubernetes.io/instance: {{ .Release.Name }}
     {{- include "labels.custom" . | nindent 2 }}
 spec:
   replicas: 1
@@ -17,7 +17,7 @@ spec:
       labels:
         name: {{ $.Values.server.name }}
         app.kubernetes.io/name: {{ $.Values.server.name }}
-        app.kubernetes.io/instance: {{ .Release.Name }} 
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ $.Values.vault.serviceaccountname }}
       imagePullSecrets:
@@ -60,6 +60,10 @@ spec:
            exit 1
            fi
           }
+
+          set -x
+
+          echo "Try #ASDFASDFASDF====="
 
           KUBE_SA_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
           echo "Getting secrets from Vault Server: ${VAULT_ADDR}"
