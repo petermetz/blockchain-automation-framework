@@ -43,7 +43,7 @@
 
 - name: Install flux 3
   shell: |
-    KUBECONFIG={{ kubeconfig_path }} helm upgrade --install --set rbac.create=false --set helmOperator.create=true --set git.timeout=200s --set git.pollInterval=2m --set git.url='{{ git_url }}' --set git.secretName=git-auth-{{ network.env.type }} --set git.branch={{ git_branch }} --set git.label='sync-{{ network.env.type }}' --set git.path="{{ git_path }}" --set-file ssh.known_hosts=flux_known_hosts --set registry.insecureHosts="{{ network.docker.url }}" --namespace default flux-{{ network.env.type }} --version "0.15.0" fluxcd/flux --kube-context="{{ kubecontext }}"
+    KUBECONFIG={{ kubeconfig_path }} helm upgrade --install --set rbac.create=true --set helmOperator.create=true --set git.timeout=200s --set git.pollInterval=2m --set git.url='{{ git_url }}' --set git.secretName=git-auth-{{ network.env.type }} --set git.branch={{ git_branch }} --set git.label='sync-{{ network.env.type }}' --set git.path="{{ git_path }}" --set-file ssh.known_hosts=flux_known_hosts --set registry.insecureHosts="{{ network.docker.url }}" --namespace default flux-{{ network.env.type }} --version "0.15.0" fluxcd/flux --kube-context="{{ kubecontext }}"
   when: flux_service.resources|length == 0
   retries: 10
   delay: 1
