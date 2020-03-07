@@ -27,9 +27,16 @@ vault secrets enable -version=1 -path=secret kv
 
 microk8s.reset --destroy-storage
 microk8s.status --wait-ready
-microk8s.enable rbac dns storage helm
+microk8s.enable rbac
+microk8s.status --wait-ready
+microk8s.enable dns
+microk8s.status --wait-ready
+microk8s.enable storage
+microk8s.status --wait-ready
+microk8s.enable helm
 microk8s.status --wait-ready
 
+microk8s.kubectl delete clusterrolebinding flux-local
 microk8s.kubectl delete clusterrole flux-local
 
 docker run -v $(pwd):/home/blockchain-automation-framework/ hyperledgerlabs/baf-build || kill $VAULT_PID
