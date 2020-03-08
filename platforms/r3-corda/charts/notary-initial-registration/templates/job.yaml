@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     {{- include "labels.custom" . | nindent 2 }}
 spec:
-    backoffLimit: 6
+    backoffLimit: 12
     template:
       metadata:
         labels:
@@ -38,19 +38,19 @@ spec:
             {{- end }}
             rm -rf ${BASE_DIR}/certificates/done.txt
 
-            # Setting up enviroment variables 
+            # Setting up enviroment variables
             export DEFAULT_TRUSTSTORE_PASSWORD=`cat /opt/node/creds/default_truststore_cred`
             export KEYSTORE_PASSWORD=`cat /opt/node/creds/keystore_cred`
             export TRUSTSTORE_PASSWORD=`cat /opt/node/creds/truststore_cred`
             export DEFAULT_KEYSTORE_PASSWORD=`cat /opt/node/creds/default_keystore_cred`
 
-            # import self signed tls certificate of doorman and networkmap, since java only trusts certificate signed by well known CA  
+            # import self signed tls certificate of doorman and networkmap, since java only trusts certificate signed by well known CA
             {{- if .Values.image.privateCertificate }}
             yes | keytool -importcert -file {{ $.Values.volume.baseDir }}/certificates/networkmap/networkmap.crt -storepass changeit -alias {{ $.Values.image.networkmapCertAlias }} -keystore /usr/lib/jvm/java-1.8-openjdk/jre/lib/security/cacerts
             yes | keytool -importcert -file {{ $.Values.volume.baseDir }}/certificates/doorman/doorman.crt -storepass changeit -alias {{ $.Values.image.doormanCertAlias }} -keystore /usr/lib/jvm/java-1.8-openjdk/jre/lib/security/cacerts
             {{- end }}
-           
-            # command to run corda jar and perform initial-registration            
+
+            # command to run corda jar and perform initial-registration
             java $JAVA_OPTIONS -jar ${CORDA_HOME}/corda.jar initial-registration --network-root-truststore-password ${DEFAULT_TRUSTSTORE_PASSWORD} --network-root-truststore ${BASE_DIR}/certificates/network-map-truststore.jks --base-directory=${BASE_DIR}
 
             #changing password of keystore.
@@ -174,7 +174,7 @@ spec:
             # delete previously created node.conf, and create a new node.conf
             rm -f ${BASE_DIR}/node.conf;
             touch ${BASE_DIR}/node.conf;
-            
+
             # setting up env to get secrets from vault
             KUBE_SA_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
             echo "Getting secrets from Vault Server"
@@ -315,7 +315,7 @@ spec:
            - name: BASE_DIR
              value: {{ $.Values.volume.baseDir }}
            - name: CERTS_SECRET_PREFIX
-             value: {{.Values.vault.certsecretprefix}}          
+             value: {{.Values.vault.certsecretprefix}}
           command: ["sh", "-c"]
           args:
           - |-
@@ -326,7 +326,7 @@ spec:
                  exit 1
               fi
             }
-            
+
             # To check if custom nodekeystore is retrived from vault, if yes then store it in nodekeystore.jks
             validateVaultResponseCustomnodeKeystore () {
               if echo ${2} | grep "errors";
@@ -337,7 +337,7 @@ spec:
                   echo "${NODE_KEY}" | base64 -d > ${OUTPUT_PATH}/nodekeystore.jks
               fi
             }
-            
+
             # To check if certificates are already present in vault or not
             validateVaultResponseKeystore () {
               if echo ${2} | grep "errors";
@@ -349,12 +349,12 @@ spec:
               fi
             }
 
-            # setting up env to get secrets from vault            
+            # setting up env to get secrets from vault
             echo "Getting secrets from Vault Server"
             KUBE_SA_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
             VAULT_TOKEN=$(curl -sS --request POST ${VAULT_ADDR}/v1/auth/${KUBERNETES_AUTH_PATH}/login -H "Content-Type: application/json" -d '{"role":"vault-role","jwt":"'"${KUBE_SA_TOKEN}"'"}' | jq -r 'if .errors then . else .auth.client_token end')
             validateVaultResponse 'vault login token' "${VAULT_TOKEN}"
-            
+
             OUTPUT_PATH=${BASE_DIR}
 
             # get customnodekeystore from vault
@@ -368,7 +368,7 @@ spec:
             TLS_NMS=$(echo ${LOOKUP_SECRET_RESPONSE} | jq -r '.data["network-map-truststore"]')
             echo "${TLS_NMS}" | base64 -d > ${OUTPUT_PATH}/network-map-truststore.jks
 
-            # To check if sslkeystore,nodekeystore,truststore are present in vault 
+            # To check if sslkeystore,nodekeystore,truststore are present in vault
             LOOKUP_SECRET_RESPONSE=$(curl -sS --header "X-Vault-Token: ${VAULT_TOKEN}" ${VAULT_ADDR}/v1/${CERTS_SECRET_PREFIX}/nodekeystore | jq -r 'if .errors then . else . end')
             validateVaultResponseKeystore "secret on (${CERTS_SECRET_PREFIX}/nodekeystore)" "${LOOKUP_SECRET_RESPONSE}"
             LOOKUP_SECRET_RESPONSE=$(curl -sS --header "X-Vault-Token: ${VAULT_TOKEN}" ${VAULT_ADDR}/v1/${CERTS_SECRET_PREFIX}/sslkeystore | jq -r 'if .errors then . else . end')
@@ -429,7 +429,7 @@ spec:
             validateVaultResponse 'vault login token' "${VAULT_TOKEN}"
 
             OUTPUT_PATH=${BASE_DIR}
-            
+
             # get keystore passwords from vault
             LOOKUP_PWD_RESPONSE=$(curl -sS --header "X-Vault-Token: ${VAULT_TOKEN}" ${VAULT_ADDR}/v1/${KS_SECRET_PREFIX} | jq -r 'if .errors then . else . end')
             DEFAULT_TRUSTSTOREPASSWORD=$(echo ${LOOKUP_PWD_RESPONSE} | jq -r '.data["defaultTrustStorePassword"]')

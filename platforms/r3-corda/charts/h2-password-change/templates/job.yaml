@@ -7,16 +7,16 @@ metadata:
     app.kubernetes.io/name: h2-pass-change-{{ .Values.nodeName }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}  
+    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
-  backoffLimit: 6
+  backoffLimit: 12
   ttlSecondsAfterFinished: 300
   template:
     metadata:
       labels:
         app: h2-pass-change-{{ .Values.nodeName }}
         app.kubernetes.io/name: h2-pass-change-{{ .Values.nodeName }}
-        app.kubernetes.io/instance: {{ .Release.Name }} 
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       restartPolicy: "OnFailure"
       serviceAccountName: {{ .Values.vault.serviceaccountname }}
@@ -32,7 +32,7 @@ spec:
         command: ["sh", "-c"]
         args:
         - |-
-          #!/usr/bin/env sh           
+          #!/usr/bin/env sh
           export SA_PASSWORD=`cat /opt/db/creds/db_cred`
           cat << EOF > ${MOUNT_PATH}/changepass.sql
           ALTER USER SA SET PASSWORD '${SA_PASSWORD}';
@@ -78,11 +78,11 @@ spec:
               fi
              }
              KUBE_SA_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-             VAULT_TOKEN=$(curl -sS --request POST ${VAULT_ADDR}/v1/auth/${KUBERNETES_AUTH_PATH}/login -H "Content-Type: application/json" -d '{"role":"vault-role","jwt":"'"${KUBE_SA_TOKEN}"'"}' | jq -r 'if .errors then . else .auth.client_token end')          
+             VAULT_TOKEN=$(curl -sS --request POST ${VAULT_ADDR}/v1/auth/${KUBERNETES_AUTH_PATH}/login -H "Content-Type: application/json" -d '{"role":"vault-role","jwt":"'"${KUBE_SA_TOKEN}"'"}' | jq -r 'if .errors then . else .auth.client_token end')
              validateVaultResponse 'vault login token' "${VAULT_TOKEN}"
-             
+
              LOOKUP_PWD_RESPONSE=$(curl -sS --header "X-Vault-Token: ${VAULT_TOKEN}" ${VAULT_ADDR}/v1/${DB_SECRET_PREFIX} | jq -r 'if .errors then . else . end')
-             SA_PASSWORD=$(echo ${LOOKUP_PWD_RESPONSE} | jq -r '.data["sa"]')            
+             SA_PASSWORD=$(echo ${LOOKUP_PWD_RESPONSE} | jq -r '.data["sa"]')
              echo "${SA_PASSWORD}" >> ${MOUNT_PATH}/db_cred
         volumeMounts:
         - name: creds
@@ -96,7 +96,7 @@ spec:
         - |-
           #!/usr/bin/env sh
           COUNTER=1
-          FLAG=true                   
+          FLAG=true
           while [ "$COUNTER" -le {{ $.Values.db.readinessthreshold }} ]
           do
             DB_NODE={{ .Values.dbUrl }}:{{ .Values.dbPort }}
@@ -105,11 +105,11 @@ spec:
             then
               FLAG=false
             else
-              FLAG=true                
+              FLAG=true
               echo "DB up and running"
-            fi   
+            fi
             if [ "$FLAG" == false ]
-            then                
+            then
               echo "Retry attempted $COUNTER times, retrying after {{ $.Values.db.readinesscheckinterval }} seconds"
               COUNTER=`expr "$COUNTER" + 1`
               sleep {{ $.Values.db.readinesscheckinterval }}
@@ -118,9 +118,9 @@ spec:
               echo "DB up and running!"
               exit 0
               break
-            fi   
+            fi
           done
-          if [ "$COUNTER" -gt {{ $.Values.db.readinessthreshold }} ] || [ "$FLAG" == false ] 
+          if [ "$COUNTER" -gt {{ $.Values.db.readinessthreshold }} ] || [ "$FLAG" == false ]
           then
             echo "Retry attempted $COUNTER times, no DB up and running. Giving up!"
             exit 1
@@ -134,4 +134,4 @@ spec:
             claimName: {{ .Values.nodeName }}db-pvc
         - name: creds
           emptyDir:
-          medium: Memory  
+          medium: Memory
