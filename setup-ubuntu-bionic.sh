@@ -35,6 +35,16 @@ microk8s.status --wait-ready
 microk8s.enable helm
 microk8s.status --wait-ready
 
+microk8s.kubectl delete secret ca-carrier-net-ambassador-certs
+microk8s.kubectl delete secret ca-manufacturer-net-ambassador-certs
+microk8s.kubectl delete secret ca-supplychain-net-ambassador-certs
+microk8s.kubectl delete secret default-token-czpkr
+microk8s.kubectl delete secret flux-local-token-llsbw
+microk8s.kubectl delete secret git-auth-local
+microk8s.kubectl delete secret orderer1-supplychain-net-ambassador-certs
+microk8s.kubectl delete secret peer0-carrier-net-ambassador-certs
+microk8s.kubectl delete secret peer0-manufacturer-net-ambassador-certs
+
 microk8s.kubectl delete clusterrolebinding flux-local
 microk8s.kubectl delete clusterrole flux-local
 
