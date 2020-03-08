@@ -13,7 +13,7 @@ metadata:
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- include "labels.custom" . | nindent 2 }}    
+    {{- include "labels.custom" . | nindent 2 }}
 spec:
   backoffLimit: 6
   template:
@@ -21,9 +21,9 @@ spec:
       labels:
         app: createchannel-{{ $.Values.channel.name }}
         app.kubernetes.io/name: createchannel-{{ $.Values.channel.name }}
-        app.kubernetes.io/instance: {{ .Release.Name }} 
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      restartPolicy: "OnFailure"
+      restartPolicy: "Never"
       serviceAccountName: {{ $.Values.vault.serviceaccountname }}
       imagePullSecrets:
         - name: {{ $.Values.vault.imagesecretname }}
@@ -76,7 +76,7 @@ spec:
           VAULT_CLIENT_TOKEN=$(curl -sS --request POST ${VAULT_ADDR}/v1/auth/${KUBERNETES_AUTH_PATH}/login \
             -H "Content-Type: application/json" \
             -d '{"role":"'"${VAULT_APP_ROLE}"'","jwt":"'"${KUBE_SA_TOKEN}"'"}' | \
-            jq -r 'if .errors then . else .auth.client_token end')          
+            jq -r 'if .errors then . else .auth.client_token end')
           validateVaultResponse 'vault login token' "${VAULT_CLIENT_TOKEN}"
 
           vault_secret_key="${VAULT_ORDERER_SECRET_PREFIX}/tls"
@@ -85,7 +85,7 @@ spec:
           OUTPUT_PATH="${MOUNT_PATH}/orderer/tls"
           LOOKUP_SECRET_RESPONSE=$(curl -sS --header "X-Vault-Token: ${VAULT_CLIENT_TOKEN}" ${VAULT_ADDR}/v1/${vault_secret_key} | jq -r 'if .errors then . else . end')
 
-          validateVaultResponse "secret (${vault_secret_key})" "${LOOKUP_SECRET_RESPONSE}" 
+          validateVaultResponse "secret (${vault_secret_key})" "${LOOKUP_SECRET_RESPONSE}"
 
           TLS_CA_CERT=$(echo ${LOOKUP_SECRET_RESPONSE} | jq -r '.data["ca.crt"]')
 
@@ -97,7 +97,7 @@ spec:
 
           OUTPUT_PATH="${MOUNT_PATH}/admin/msp"
           LOOKUP_SECRET_RESPONSE=$(curl -sS --header "X-Vault-Token: ${VAULT_CLIENT_TOKEN}" ${VAULT_ADDR}/v1/${vault_secret_key} | jq -r 'if .errors then . else . end')
-          validateVaultResponse "secret (${vault_secret_key})" "${LOOKUP_SECRET_RESPONSE}" 
+          validateVaultResponse "secret (${vault_secret_key})" "${LOOKUP_SECRET_RESPONSE}"
 
           ADMINCERT=$(echo ${LOOKUP_SECRET_RESPONSE} | jq -r '.data["admincerts"]')
           CACERTS=$(echo ${LOOKUP_SECRET_RESPONSE} | jq -r '.data["cacerts"]')
@@ -139,7 +139,7 @@ spec:
           else
             peer channel fetch 0 -c ${CHANNEL_NAME}  -o ${ORDERER_URL} /tmp/${CHANNEL_NAME}.block
           fi
-          
+
           if [ -f /tmp/${CHANNEL_NAME}.block ]
           then
             echo "Channel ${CHANNEL_NAME} is already created."
@@ -149,11 +149,11 @@ spec:
             then
               peer channel create -o ${ORDERER_URL} -c ${CHANNEL_NAME} -f channel.tx --tls ${CORE_PEER_TLS_ENABLED} --cafile ${ORDERER_CA}
             else
-              peer channel create -o ${ORDERER_URL} -c ${CHANNEL_NAME} -f channel.tx 
+              peer channel create -o ${ORDERER_URL} -c ${CHANNEL_NAME} -f channel.tx
             fi
           fi
         workingDir: /opt/gopath/src/github.com/hyperledger/fabric/peer
-        
+
         envFrom:
         - configMapRef:
             name: {{ $.Values.channel.name }}-config
