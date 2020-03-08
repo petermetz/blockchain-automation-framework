@@ -63,6 +63,9 @@ spec:
         args:
         - |-
           #!/usr/bin/env sh
+
+          set -x
+
           validateVaultResponse () {
           if echo ${2} | grep "errors"; then
            echo "ERROR: unable to retrieve ${1}: ${2}"
