@@ -23,7 +23,7 @@ spec:
         app.kubernetes.io/name: createchannel-{{ $.Values.channel.name }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      restartPolicy: "Never"
+      restartPolicy: "OnFailure"
       serviceAccountName: {{ $.Values.vault.serviceaccountname }}
       imagePullSecrets:
         - name: {{ $.Values.vault.imagesecretname }}
