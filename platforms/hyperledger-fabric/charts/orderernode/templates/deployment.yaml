@@ -14,6 +14,7 @@ spec:
     type: RollingUpdate
   serviceName: "{{ $.Values.orderer.name }}"
   replicas: 1
+  backoffLimit: 12
   template:
     metadata:
       annotations:
@@ -21,9 +22,10 @@ spec:
       labels:
         app: {{ $.Values.orderer.name }}
         app.kubernetes.io/name: {{ $.Values.orderer.name }}
-        app.kubernetes.io/instance: {{ .Release.Name }} 
-    spec:    
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
       serviceAccountName: {{ $.Values.vault.serviceaccountname }}
+      backoffLimit: 12
       imagePullSecrets:
         - name: {{ $.Values.vault.imagesecretname }}
       volumes:
@@ -200,7 +202,7 @@ spec:
   volumeClaimTemplates:
   #Lables are not being taken by Kubernetes as it dynamically creates PVC
   - metadata:
-      name: datadir    
+      name: datadir
     spec:
       accessModes: [ "ReadWriteOnce" ]
       storageClassName: {{ $.Values.storage.storageclassname }}
