@@ -136,6 +136,8 @@ spec:
 
           set -x
 
+          ls -ltR /opt/gopath/src/github.com/hyperledger/fabric/crypto
+
           cat ./channel-artifacts/channel.tx.base64 | base64 --decode > channel.tx
           echo "Fetch block to see if channel has already been created..."
           tls_status=${CORE_PEER_TLS_ENABLED}
