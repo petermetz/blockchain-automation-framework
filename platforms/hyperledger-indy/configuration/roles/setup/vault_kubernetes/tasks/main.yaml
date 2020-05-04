@@ -41,7 +41,7 @@
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
-  when: auth_list.stdout.find(auth_path) == -1  # Only when auth_path is NOT in the output of auth_list
+  # when: auth_list.stdout.find(auth_path) == -1  # Only when auth_path is NOT in the output of auth_list
   ignore_errors: yes
 
 ############################################################################################
